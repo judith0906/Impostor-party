@@ -1,0 +1,29 @@
+<!-- FILE: src/main/webapp/fin.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fin de la partida - Impostor Party</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="logo-area">
+            <div class="mask-icon">?</div>
+            <h1>¡Partida <span class="accent">terminada</span>!</h1>
+        </div>
+
+        <div class="card reveal-card">
+            <span class="impostor-badge" id="impostorLabel">El/los impostor/es era/n</span>
+            <div class="impostor-name" id="impostorNames">Cargando...</div>
+
+            <p class="finished-word" id="wordsSummary"></p>
+        </div>
+
+        <a href="index.html" class="btn-secondary" style="margin-top: 16px;">Volver al inicio</a>
+    </div>
+
+    <script src="js/fin.js"></script>
+</body>
+</html>

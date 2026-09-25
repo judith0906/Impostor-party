@@ -1,0 +1,30 @@
+<!-- FILE: src/main/webapp/juego.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tu partida - Impostor Party</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="logo-area">
+            <p class="tagline" id="playerNameDisplay">Jugando como...</p>
+            <div class="timer-display" id="timerDisplay">--:--:--</div>
+        </div>
+
+        <div class="card word-card">
+            <p class="field-label">Tu palabra</p>
+            <div class="word-display" id="wordDisplay">...</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Tus tareas de esta noche</h2>
+            <ul class="task-list" id="taskList"></ul>
+        </div>
+    </div>
+
+    <script src="js/juego.js"></script>
+</body>
+</html>

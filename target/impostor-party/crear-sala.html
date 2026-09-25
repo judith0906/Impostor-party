@@ -1,0 +1,46 @@
+<!-- FILE: src/main/webapp/crear-sala.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear sala - Impostor Party</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="logo-area">
+            <div class="mask-icon">?</div>
+            <h1>Configura tu <span class="accent">sala</span></h1>
+        </div>
+
+        <div class="card">
+            <form id="createRoomForm">
+                <label class="field-label">Numero de impostores</label>
+                <select id="numImpostors">
+                    <option value="1">1 impostor</option>
+                    <option value="2">2 impostores</option>
+                    <option value="3">3 impostores</option>
+                </select>
+
+                <label class="field-label">Tipo de retos</label>
+                <div class="chip-group" id="challengeGroup">
+                    <button type="button" class="chip active" data-value="normales">Normales</button>
+                    <button type="button" class="chip" data-value="amigos">Amigos</button>
+                    <button type="button" class="chip" data-value="picantes">Picantes</button>
+                    <button type="button" class="chip" data-value="salseo">Salseo</button>
+                    <button type="button" class="chip" data-value="extremos">Extremos</button>
+                </div>
+
+                <label class="field-label">Duracion: <span id="hoursLabel">3</span>h</label>
+                <input type="range" id="durationHours" min="1" max="12" value="3">
+
+                <p class="error-msg" id="errorMsg"></p>
+                <button type="submit" class="btn-primary">Crear sala</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/crear-sala.js"></script>
+</body>
+</html>

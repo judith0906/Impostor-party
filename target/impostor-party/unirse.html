@@ -1,0 +1,29 @@
+<!-- FILE: src/main/webapp/unirse.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unirse a sala - Impostor Party</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="logo-area">
+            <div class="mask-icon">?</div>
+            <h1>Unete a la <span class="accent">partida</span></h1>
+        </div>
+
+        <div class="card">
+            <form id="joinForm">
+                <input type="text" id="code" placeholder="Codigo de sala (ej: A3F9K2)" maxlength="6" style="text-transform: uppercase;" required>
+                <input type="text" id="nickname" placeholder="Tu nombre" maxlength="50" required>
+                <p class="error-msg" id="errorMsg"></p>
+                <button type="submit" class="btn-primary">Unirme</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/unirse.js"></script>
+</body>
+</html>

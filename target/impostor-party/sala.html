@@ -1,0 +1,35 @@
+<!-- FILE: src/main/webapp/sala.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de espera - Impostor Party</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="logo-area">
+            <p class="tagline">Codigo de sala</p>
+            <div class="room-code" id="roomCodeDisplay">------</div>
+        </div>
+
+        <div class="card">
+            <h2 class="section-title">Jugadores</h2>
+            <ul class="player-list" id="playerList"></ul>
+
+            <div id="hostControls" style="display:none;">
+                <button class="btn-primary" id="startGameBtn">Iniciar partida</button>
+            </div>
+
+            <div id="playerControls" style="display:none;">
+                <button class="btn-primary" id="readyBtn">Estoy listo</button>
+            </div>
+
+            <p class="error-msg" id="errorMsg"></p>
+        </div>
+    </div>
+
+    <script src="js/sala.js"></script>
+</body>
+</html>
