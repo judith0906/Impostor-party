@@ -18,13 +18,40 @@
             <h2 class="section-title">Jugadores</h2>
             <ul class="player-list" id="playerList"></ul>
 
+            <div id="lobbyControls" style="display:none;">
+                <button class="btn-primary" id="readyBtn">Estoy listo</button>
+            </div>
+
             <div id="hostControls" style="display:none;">
                 <button class="btn-primary" id="startGameBtn">Iniciar partida</button>
             </div>
 
-            <div id="playerControls" style="display:none;">
-                <button class="btn-primary" id="readyBtn">Estoy listo</button>
-            </div>
+            <details class="config-panel" id="configPanel" hidden>
+                <summary class="config-summary">Configuracion de la partida</summary>
+                <div class="config-body">
+                    <label class="field-label" for="configImpostors">Numero de impostores</label>
+                    <select id="configImpostors">
+                        <option value="1">1 impostor</option>
+                        <option value="2">2 impostores</option>
+                        <option value="3">3 impostores</option>
+                    </select>
+
+                    <label class="field-label" for="configChallenge">Tipo de retos</label>
+                    <select id="configChallenge">
+                        <option value="normales">Normales</option>
+                        <option value="amigos">Amigos</option>
+                        <option value="picantes">Picantes</option>
+                        <option value="salseo">Salseo</option>
+                        <option value="extremos">Extremos</option>
+                    </select>
+
+                    <label class="field-label" for="configDuration">Duracion: <span id="configDurationLabel">3</span>h</label>
+                    <input type="range" id="configDuration" min="1" max="12" value="3">
+
+                    <p class="config-status" id="configStatus"></p>
+                    <button class="btn-primary" id="saveConfigBtn">Guardar cambios</button>
+                </div>
+            </details>
 
             <p class="error-msg" id="errorMsg"></p>
         </div>

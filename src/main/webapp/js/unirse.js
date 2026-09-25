@@ -23,8 +23,9 @@ joinForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        localStorage.setItem('sessionToken', data.sessionToken);
-        localStorage.setItem('nickname', nickname);
+        sessionStorage.setItem('sessionToken', data.sessionToken);
+        sessionStorage.setItem('nickname', nickname);
+        sessionStorage.setItem('roomCode', data.code);
         window.location.href = `sala.html?code=${data.code}`;
 
     } catch (err) {

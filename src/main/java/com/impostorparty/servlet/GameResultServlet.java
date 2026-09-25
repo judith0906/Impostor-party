@@ -1,4 +1,3 @@
-// FILE: src/main/java/com/impostorparty/servlet/GameResultServlet.java
 package com.impostorparty.servlet;
 
 import com.impostorparty.dao.PlayerDAO;
@@ -6,6 +5,7 @@ import com.impostorparty.dao.RoomDAO;
 import com.impostorparty.model.Player;
 import com.impostorparty.model.Room;
 import com.impostorparty.util.JsonUtil;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -16,17 +16,23 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.Locale;
 
 @WebServlet("/api/rooms/result")
 public class GameResultServlet extends HttpServlet {
-
     private final RoomDAO roomDAO = new RoomDAO();
     private final PlayerDAO playerDAO = new PlayerDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String token = request.getHeader("X-Player-Token");
+        if (token == null || token.trim().isEmpty()) {
+            JsonUtil.sendError(response, 401, "Falta el token del jugador");
+            return;
+        }
 
         String code = request.getParameter("code");
         if (code == null || code.trim().isEmpty()) {
@@ -35,41 +41,84 @@ public class GameResultServlet extends HttpServlet {
         }
 
         try {
-            Room room = roomDAO.findByCode(code.trim().toUpperCase());
+            Room room = roomDAO.findByCode(code.trim().toUpperCase(Locale.ROOT));
             if (room == null) {
                 JsonUtil.sendError(response, 404, "Sala no encontrada");
                 return;
             }
 
-            // Marcamos la sala como finalizada la primera vez que se consulta el resultado tras acabar el tiempo
+            Player player = playerDAO.findBySessionToken(token.trim());
+            if (player == null) {
+                JsonUtil.sendError(response, 404, "Jugador no encontrado");
+                return;
+            }
+            if (player.getRoomId() != room.getId()) {
+                JsonUtil.sendError(response, 403, "El jugador no pertenece a esta sala");
+                return;
+            }
+
+            if ("LOBBY".equals(room.getStatus())) {
+                JsonUtil.sendError(response, 409, "La partida todavia no ha empezado");
+                return;
+            }
             if ("IN_PROGRESS".equals(room.getStatus())) {
-                roomDAO.updateStatus(room.getId(), "FINISHED");
+                Timestamp now = new Timestamp(System.currentTimeMillis());
+                if (room.getEndTime() == null || room.getEndTime().after(now)) {
+                    JsonUtil.sendError(response, 409, "La partida todavia no ha terminado");
+                    return;
+                }
+                if (roomDAO.finishIfExpired(room.getId(), now)) {
+                    room.setStatus("FINISHED");
+                } else {
+                    room = roomDAO.findById(room.getId());
+                    if (room == null || "IN_PROGRESS".equals(room.getStatus())) {
+                        JsonUtil.sendError(response, 409, "La partida todavia no ha terminado");
+                        return;
+                    }
+                }
+            }
+            if (!"FINISHED".equals(room.getStatus())) {
+                JsonUtil.sendError(response, 409, "La sala no tiene un resultado disponible");
+                return;
             }
 
             List<Player> players = playerDAO.findByRoomId(room.getId());
+            boolean hasImpostor = false;
+            boolean hasCivilWord = false;
+            for (Player roomPlayer : players) {
+                hasImpostor |= Boolean.TRUE.equals(roomPlayer.getIsImpostor());
+                hasCivilWord |= !Boolean.TRUE.equals(roomPlayer.getIsImpostor())
+                        && roomPlayer.getWordAssigned() != null;
+            }
+            if (!hasImpostor || !hasCivilWord) {
+                JsonUtil.sendError(response, 409, "La sala no tiene datos de partida");
+                return;
+            }
 
-            JSONArray impostorsJson = new JSONArray();
+            JSONArray impostors = new JSONArray();
+            JSONArray impostorDetails = new JSONArray();
             String normalWord = null;
-            String impostorWord = null;
-
-            for (Player p : players) {
-                if (Boolean.TRUE.equals(p.getIsImpostor())) {
-                    impostorsJson.put(p.getNickname());
-                    impostorWord = p.getWordAssigned();
+            for (Player roomPlayer : players) {
+                if (Boolean.TRUE.equals(roomPlayer.getIsImpostor())) {
+                    impostors.put(roomPlayer.getNickname());
+                    JSONObject detail = new JSONObject();
+                    detail.put("nickname", roomPlayer.getNickname());
+                    detail.put("word", roomPlayer.getWordAssigned());
+                    impostorDetails.put(detail);
                 } else {
-                    normalWord = p.getWordAssigned();
+                    normalWord = roomPlayer.getWordAssigned();
                 }
             }
 
             JSONObject result = new JSONObject();
             result.put("success", true);
-            result.put("impostors", impostorsJson);
+            result.put("impostors", impostors);
             result.put("normalWord", normalWord);
-            result.put("impostorWord", impostorWord);
+            result.put("impostorDetails", impostorDetails);
+            response.setHeader("Cache-Control", "no-store");
             JsonUtil.sendJson(response, 200, result);
-
         } catch (SQLException e) {
-            JsonUtil.sendError(response, 500, "Error de base de datos: " + e.getMessage());
+            JsonUtil.sendError(response, 500, "Error de base de datos");
         }
     }
 }

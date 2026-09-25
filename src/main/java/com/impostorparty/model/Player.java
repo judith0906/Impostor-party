@@ -1,12 +1,12 @@
-// FILE: src/main/java/com/impostorparty/model/Player.java
 package com.impostorparty.model;
 
 public class Player {
     private int id;
     private int roomId;
+    private Integer userId;
     private String nickname;
     private String sessionToken;
-    private Boolean isImpostor; // null hasta que empieza la partida
+    private Boolean isImpostor;
     private boolean ready;
     private String wordAssigned;
 
@@ -18,6 +18,9 @@ public class Player {
 
     public int getRoomId() { return roomId; }
     public void setRoomId(int roomId) { this.roomId = roomId; }
+
+    public Integer getUserId() { return userId; }
+    public void setUserId(Integer userId) { this.userId = userId; }
 
     public String getNickname() { return nickname; }
     public void setNickname(String nickname) { this.nickname = nickname; }

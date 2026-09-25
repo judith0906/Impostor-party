@@ -138,6 +138,17 @@ input::placeholder {
     transform: scale(0.96);
 }
 
+.btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
 .error-msg {
     color: var(--pink-neon);
     font-size: 13px;
@@ -159,6 +170,19 @@ select, input[type="range"] {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     padding: 12px;
+    color: var(--text-light);
+}
+
+select:focus,
+input[type="range"]:focus {
+    outline: none;
+    border-color: var(--purple-neon);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+}
+
+select option,
+select optgroup {
+    background: var(--card-bg);
     color: var(--text-light);
 }
 
@@ -240,6 +264,75 @@ select, input[type="range"] {
 .player-status.waiting {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
+}
+
+.player-name {
+    max-width: 70%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.config-panel {
+    margin-top: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+.config-panel[hidden] {
+    display: none;
+}
+
+.config-summary {
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.config-summary:hover {
+    color: var(--text-light);
+}
+
+.config-summary::-webkit-details-marker {
+    display: none;
+}
+
+.config-body {
+    margin-top: 4px;
+}
+
+.config-body .field-label:first-child {
+    margin-top: 12px;
+}
+
+.config-status {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    min-height: 16px;
+    margin-top: 14px;
+}
+
+.config-status.pending {
+    color: #fbbf24;
+}
+
+.config-status.saving {
+    color: var(--text-muted);
+}
+
+.config-status.ok {
+    color: #4ade80;
+}
+
+.config-status.error {
+    color: var(--pink-neon);
 }
 
 
@@ -375,4 +468,39 @@ select, input[type="range"] {
     color: var(--text-muted);
     font-size: 14px;
     margin-top: 12px;
+}
+
+.impostor-word-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.impostor-word-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.impostor-word-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.impostor-word-value {
+    color: var(--pink-neon);
+    font-weight: 700;
+    text-align: right;
+    word-break: break-word;
 }

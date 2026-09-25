@@ -31,21 +31,20 @@ public class PlayerScreenServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String token = request.getParameter("sessionToken");
+        String token = request.getHeader("X-Player-Token");
         if (token == null || token.trim().isEmpty()) {
-            JsonUtil.sendError(response, 400, "Falta el token de sesion");
+            JsonUtil.sendError(response, 401, "Falta el token del jugador");
             return;
         }
 
         try {
-            Player player = playerDAO.findBySessionToken(token);
+            Player player = playerDAO.findBySessionToken(token.trim());
             if (player == null) {
                 JsonUtil.sendError(response, 404, "Jugador no encontrado");
                 return;
             }
 
-            Room room = roomDAO.findByCode(getRoomCode(player.getRoomId()));
-            
+            Room room = roomDAO.findById(player.getRoomId());
 
             List<Map<String, Object>> tasks = playerDAO.getPlayerTasks(player.getId());
             JSONArray tasksJson = new JSONArray();
@@ -64,23 +63,11 @@ public class PlayerScreenServlet extends HttpServlet {
             result.put("tasks", tasksJson);
             result.put("endTime", room != null && room.getEndTime() != null ? room.getEndTime().getTime() : 0);
             result.put("roomCode", room != null ? room.getCode() : "");
+            response.setHeader("Cache-Control", "no-store");
             JsonUtil.sendJson(response, 200, result);
 
         } catch (SQLException e) {
-            JsonUtil.sendError(response, 500, "Error de base de datos: " + e.getMessage());
+            JsonUtil.sendError(response, 500, "Error de base de datos");
         }
-    }
-
-    // Pequena ayuda: como Room no se busca por id directamente en RoomDAO, resolvemos via una consulta simple
-    private String getRoomCode(int roomId) throws SQLException {
-        String sql = "SELECT code FROM rooms WHERE id = ?";
-        try (java.sql.Connection conn = com.impostorparty.util.DBConnection.getConnection();
-             java.sql.PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, roomId);
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getString("code");
-            }
-        }
-        return null;
     }
 }

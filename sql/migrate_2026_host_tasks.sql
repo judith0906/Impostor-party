@@ -1,6 +1,155 @@
 USE impostor_party;
 SET NAMES utf8mb4;
 
+CREATE TABLE IF NOT EXISTS migration_2026_host_tasks (
+    migration_key VARCHAR(64) NOT NULL PRIMARY KEY,
+    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE players ADD COLUMN user_id INT NULL AFTER id',
+        'SELECT 1')
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'players'
+      AND column_name = 'user_id'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE players ADD CONSTRAINT fk_players_user FOREIGN KEY (user_id) REFERENCES users(id)',
+        'SELECT 1')
+    FROM information_schema.key_column_usage
+    WHERE constraint_schema = DATABASE()
+      AND table_name = 'players'
+      AND column_name = 'user_id'
+      AND referenced_table_name = 'users'
+      AND referenced_column_name = 'id'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE players ADD UNIQUE KEY uq_players_room_user (room_id, user_id)',
+        'SELECT 1')
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'players'
+      AND index_name = 'uq_players_room_user'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE players ADD UNIQUE KEY uq_players_session_token (session_token)',
+        'SELECT 1')
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'players'
+      AND index_name = 'uq_players_session_token'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE tasks ADD COLUMN active BOOLEAN NOT NULL DEFAULT TRUE AFTER is_for_impostor',
+        'SELECT 1')
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'tasks'
+      AND column_name = 'active'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE player_tasks ADD COLUMN position INT NULL AFTER task_id',
+        'SELECT 1')
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'player_tasks'
+      AND column_name = 'position'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+UPDATE player_tasks
+SET position = id
+WHERE position IS NULL;
+
+ALTER TABLE player_tasks
+    MODIFY COLUMN position INT NOT NULL DEFAULT 0;
+
+DROP TEMPORARY TABLE IF EXISTS task_duplicate_map;
+CREATE TEMPORARY TABLE task_duplicate_map (
+    duplicate_id INT NOT NULL PRIMARY KEY,
+    canonical_id INT NOT NULL
+);
+INSERT INTO task_duplicate_map (duplicate_id, canonical_id)
+SELECT t.id, canonical.id
+FROM tasks t
+JOIN (
+    SELECT challenge_type, description, MIN(id) AS id
+    FROM tasks
+    GROUP BY challenge_type, description
+) canonical
+  ON canonical.challenge_type = t.challenge_type
+ AND canonical.description = t.description
+WHERE t.id <> canonical.id;
+UPDATE player_tasks pt
+JOIN task_duplicate_map duplicates ON duplicates.duplicate_id = pt.task_id
+SET pt.task_id = duplicates.canonical_id;
+DELETE t
+FROM tasks t
+JOIN task_duplicate_map duplicates ON duplicates.duplicate_id = t.id;
+DROP TEMPORARY TABLE task_duplicate_map;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE tasks ADD UNIQUE KEY uq_tasks_challenge_description (challenge_type, description)',
+        'SELECT 1')
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'tasks'
+      AND index_name = 'uq_tasks_challenge_description'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+DELETE older
+FROM words older
+INNER JOIN words newer
+    ON older.challenge_type = newer.challenge_type
+   AND older.word = newer.word
+   AND older.id > newer.id;
+
+SET @sql = (
+    SELECT IF(COUNT(*) = 0,
+        'ALTER TABLE words ADD UNIQUE KEY uq_words_challenge_word (challenge_type, word)',
+        'SELECT 1')
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'words'
+      AND index_name = 'uq_words_challenge_word'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 INSERT INTO words (word, challenge_type) VALUES
 ('Playa', 'normales'),
 ('Pizza', 'normales'),
@@ -28,6 +177,23 @@ INSERT INTO words (word, challenge_type) VALUES
 ('Reto de frio', 'extremos'),
 ('Bano en agua helada', 'extremos')
 ON DUPLICATE KEY UPDATE word = VALUES(word);
+
+SET @migration_applied = (
+    SELECT COUNT(*) FROM migration_2026_host_tasks WHERE migration_key = '2026_host_tasks'
+);
+SET @sql = IF(@migration_applied = 0,
+    'UPDATE rooms SET status = ''FINISHED'' WHERE status = ''LOBBY'' OR (status = ''IN_PROGRESS'' AND end_time IS NULL)',
+    'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = IF(@migration_applied = 0,
+    'UPDATE tasks SET active = FALSE',
+    'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 INSERT INTO tasks (description, challenge_type, is_for_impostor, active) VALUES
 ('Prepara un café solo', 'normales', FALSE, TRUE),
@@ -781,5 +947,25 @@ INSERT INTO tasks (description, challenge_type, is_for_impostor, active) VALUES
 ('Pone una pose final', 'extremos', FALSE, TRUE),
 ('Pone el ritmo más fuerte', 'extremos', FALSE, TRUE)
 ON DUPLICATE KEY UPDATE
-    active = TRUE,
+    active = IF(@migration_applied = 0, TRUE, active),
     is_for_impostor = VALUES(is_for_impostor);
+
+INSERT INTO migration_2026_host_tasks (migration_key)
+VALUES ('2026_host_tasks')
+ON DUPLICATE KEY UPDATE applied_at = applied_at;
+
+SELECT challenge_type, COUNT(*) AS task_count
+FROM tasks
+WHERE active = TRUE
+GROUP BY challenge_type
+ORDER BY challenge_type;
+
+SELECT COUNT(*) AS total_active_tasks
+FROM tasks
+WHERE active = TRUE;
+
+SELECT challenge_type, description, COUNT(*) AS duplicate_count
+FROM tasks
+WHERE active = TRUE
+GROUP BY challenge_type, description
+HAVING COUNT(*) > 1;

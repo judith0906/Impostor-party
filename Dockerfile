@@ -4,7 +4,7 @@ FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -DskipTests clean package
 
 # Etapa 2: imagen final, solo con Tomcat 10 (compatible con jakarta.servlet) y el .war ya compilado
 FROM tomcat:10.1-jdk17

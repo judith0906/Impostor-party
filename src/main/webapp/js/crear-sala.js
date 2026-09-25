@@ -40,7 +40,14 @@ form.addEventListener('submit', async (e) => {
             return;
         }
 
-        sessionStorage.setItem('isHost', 'true');
+        if (data.sessionToken) {
+            sessionStorage.setItem('sessionToken', data.sessionToken);
+        }
+        if (data.nickname) {
+            sessionStorage.setItem('nickname', data.nickname);
+        }
+        sessionStorage.setItem('roomCode', data.code);
+        sessionStorage.removeItem('isHost');
         window.location.href = `sala.html?code=${data.code}`;
 
     } catch (err) {
