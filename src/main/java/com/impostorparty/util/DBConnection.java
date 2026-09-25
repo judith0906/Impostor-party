@@ -8,9 +8,9 @@ import java.sql.SQLException;
 public class DBConnection {
 
     // Lee la configuracion de variables de entorno; si no existen, usa estos valores por defecto (solo para desarrollo local)
-    private static final String URL = getEnvOrDefault("DB_URL", "jdbc:mysql://localhost:3306/impostor_party?useSSL=false&serverTimezone=UTC");
-    private static final String USER = getEnvOrDefault("DB_USER", "judith");
-    private static final String PASSWORD = getEnvOrDefault("DB_PASSWORD", "Jcm270906#");
+    private static final String URL = "jdbc:mysql://localhost:3306/impostor_party?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String USER = "DB_USER";
+    private static final String PASSWORD = "DB_PASSWORD";
 
     private static String getEnvOrDefault(String key, String defaultValue) {
         String value = System.getenv(key);
